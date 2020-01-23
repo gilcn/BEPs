@@ -1,6 +1,7 @@
 # BEP12: Introduce Customized Scripts and Transfer Memo Validation
 ## Summary
-This BEP describes a new feature that enables addresses to customize scripts, and introduces the a validation script for transfer transaction memo.
+This BEP describes a new feature that enables addresses to customize scripts, and introduces a validation script for transfer transaction memo.
+
 ## Abstract
 In some circumstances, users may want to specify some additional functions or/and validations on some transactions.
 
@@ -10,16 +11,18 @@ However, this user experience change causes a lot of problems for both exchange 
 
 For all transfer transactions which are depositing tokens to exchanges, it would be nice if Binance Chain can reject those that have no valid memo. Thus clients won’t be panic for losing tokens and exchanges supports won’t suffer from the heavy working load.
 
-Here a script model is introduced into Binance Chain. And each address can add new functions by associate itself with one or more predefined scripts. The memo validation is one first type of the scripts to introduce here.
+Here a script model is introduced into Binance Chain. And each address can add new functions by associating itself with one or more predefined scripts. The memo validation is one first type of the scripts to introduce here.
 
 ## Status
 This BEP is under implementation.
+
 ## Motivation
 This memo validation can be used for any membership based deposit/charge business model.
 
 This BEP also proposes an important infrastructure for customized scripts. In the future, more amazing features will be built on it.
-## Specificaion
-### Add Flags into Address Structure
+
+## Specification
+### Add Flags into Account Structure
 ```
 type Account struct {
   auth.BaseAccount                 `json:"base"`
@@ -29,7 +32,8 @@ type Account struct {
   Flags                uint64      `json:”flags”`
 }
 ```
-Each address represents an account. The account structure is shown as above. We will add a new field named “flags” into “Account”. Its data type is 64bit unsigned int. Each bit will represent a script, which means an account can specify at most 64 scripts. The flags of all existing accounts are zero. Users can send transactions to update their account flags.
+Each address represents an account. The account structure is shown as above. We will add a new field named “Flags” into “Account”. Its data type is 64bit unsigned int. Each bit will represent a script, which means an account can specify at most 64 scripts. The flags of all existing accounts are zero. Users can send transactions to update their account flags.
+
 ### New Transaction: SetAccountFlags
 Parameters for Updating Account Flags
 
@@ -40,7 +44,7 @@ Parameters for Updating Account Flags
 
 With this transaction, users can set their account flags to any values. But setting a bit which has no bonded script will not have any effect, unless a new script is bonded to it in the future.
 
-By default, all accounts’ flags are zero which means no script is specified. Suppose there are two available scripts(marked as A and B), and the lowest bit is bonded to script A and the second lowest bit is bonded to script B. If an address set its account flags to 0x03, then two scripts are enabled. If only script B is expected, then account flags should be set to 0x02.
+By default, all accounts’ flags are zero which means no script is specified. Suppose there are two available scripts (marked as A and B), and the lowest bit is bonded to script A and the second lowest bit is bonded to script B. If an address set its account flags to 0x03, then two scripts are enabled. If only script B is expected, then account flags should be set to 0x02.
 
 Besides, the account flags changes will take effect since the next transaction.
 
@@ -55,7 +59,7 @@ Firstly, this script will check the following conditions:
 Then this script will ensure that the transaction memo is not empty and the memo only contains digital letters. This is the pseudocode:
 
 ```
-func memoValiation(addr, tx) error {
+func memoValidation(addr, tx) error {
 if tx.Type != “send” {
     return nil
 }
